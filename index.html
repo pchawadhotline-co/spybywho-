@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#07090e]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Terminal & Automation Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 3s infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { opacity: 0.4, transform: 'scale(1)' },
+                            '100%': { opacity: 0.8, transform: 'scale(1.05)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-input {
+            background: rgba(8, 12, 22, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        .glass-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+            outline: none;
+        }
+
+        /* Subtle ambient lighting */
+        .ambient-bg {
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.5) 0%, #07090e 100%);
+        }
+    </style>
+</head>
+<body class="h-full text-slate-200 antialiased font-sans ambient-bg selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 sm:p-6">
+
+    <!-- AMBIENT BACKGROUND GLOWS -->
+    <div class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none animate-glow"></div>
+    <div class="fixed bottom-10 right-10 w-[300px] h-[300px] bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-2xl z-10">
+
+        <!-- LOCK SCREEN OVERLAY -->
+        <div id="lock-screen" class="glass-panel p-8 sm:p-10 rounded-3xl shadow-2xl relative overflow-hidden transition-all duration-300">
+            <!-- Decorative accent line -->
+            <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
+
+            <div class="flex flex-col items-center text-center mb-8">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 flex items-center justify-center mb-4 shadow-inner text-indigo-400">
+                    <i data-lucide="shield-check" class="w-7 h-7"></i>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Bot Gateway</h1>
+                <p class="text-sm text-slate-400 mt-2 max-w-sm">Connect your Cloudflare Quick Tunnel API endpoint and verify your access token to continue.</p>
+            </div>
+
+            <!-- Lock Screen Controls -->
+            <div class="space-y-5">
+                <!-- Cloudflare API Input -->
+                <div>
+                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        <i data-lucide="globe" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        Cloudflare API Endpoint
+                    </label>
+                    <div class="flex flex-col sm:flex-row gap-2.5">
+                        <div class="relative flex-1">
+                            <input type="text" id="api-url" placeholder="https://xxxx.trycloudflare.com" 
+                                class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600">
+                        </div>
+                        <button id="connect-btn" onclick="connectAPI()" 
+                            class="group relative inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all duration-200 shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
+                            <span>Connect</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-0.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Status Badge -->
+                <div class="flex items-center justify-between glass-input px-4 py-3 rounded-xl">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
+                        <span class="text-xs font-medium text-slate-400">Connection Status</span>
+                    </div>
+                    <div id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-950/80 text-red-400 border border-red-800/50 shadow-sm">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                        <span>Disconnected</span>
+                    </div>
+                </div>
+
+                <!-- Access Token Input -->
+                <div>
+                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        <i data-lucide="key" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        Authorization Token
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="auth-token" placeholder="Connect API first to unlock token entry..." disabled
+                            class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 opacity-50 cursor-not-allowed">
+                        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+                            <i data-lucide="lock" class="w-4 h-4" id="token-lock-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authenticate Button -->
+                <button id="auth-btn" onclick="verifyToken()" disabled
+                    class="w-full bg-slate-800 text-slate-500 font-semibold py-3.5 rounded-xl text-sm transition-all duration-200 cursor-not-allowed flex items-center justify-center gap-2 border border-slate-700/50">
+                    <i data-lucide="unlock" class="w-4 h-4"></i>
+                    <span>Authenticate & Launch Console</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN DASHBOARD (Hidden initially) -->
+        <div id="main-dashboard" class="hidden glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden transition-all duration-300">
+            <!-- Top Header Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-800/80 gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                        <i data-lucide="cpu" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                            Bot Processor Terminal
+                            <span class="text-[10px] uppercase tracking-widest bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-semibold">Active</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Process, map, format, and split dataset files seamlessly.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload & Config Form -->
+            <form id="upload-form" class="space-y-5">
+                
+                <!-- File Drag-and-Drop Area -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Dataset Source File</label>
+                    <div class="relative group border-2 border-dashed border-slate-700/80 hover:border-indigo-500/60 rounded-2xl p-6 text-center transition-all duration-200 bg-slate-950/40 hover:bg-slate-900/50 cursor-pointer">
+                        <input type="file" id="bot-file" accept=".csv, .txt, .xlsx" onchange="handleFileSelect(event)" 
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        
+                        <div class="flex flex-col items-center justify-center gap-2 pointer-events-none">
+                            <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                            </div>
+                            <div id="file-label-container">
+                                <p class="text-sm font-medium text-slate-200">Click or drag & drop to upload dataset</p>
+                                <p class="text-xs text-slate-500 mt-1">Supports CSV, XLSX, and TXT files</p>
+                            </div>
+                            <span id="selected-file-name" class="hidden mt-2 text-xs font-mono bg-indigo-500/10 text-indigo-300 px-3 py-1 rounded-md border border-indigo-500/20 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                <span id="file-name-text">filename.csv</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column Mapping Input -->
+                <div>
+                    <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        <span>Column Layout Mapping</span>
+                        <span class="text-[10px] text-slate-500 font-normal lowercase">Comma separated sequence</span>
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="column-mapping" placeholder="e.g. First Name, Last Name, Email, Phone" 
+                            class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 font-mono text-xs">
+                    </div>
+                </div>
+
+                <!-- Format and Mode Selectors -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Export Format</label>
+                        <select id="return-format" class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-200 bg-slate-950 focus:bg-slate-900 cursor-pointer">
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="xlsx">Excel (.xlsx)</option>
+                            <option value="txt">TXT (.txt Tab Delimited)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Return Mode</label>
+                        <select id="split-mode" onchange="toggleSplitOptions()" class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-200 bg-slate-950 focus:bg-slate-900 cursor-pointer">
+                            <option value="one">One Go (Single Master File)</option>
+                            <option value="parts">Parts (Split Master File)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Items Per Part Options (Conditional) -->
+                <div id="parts-options" class="hidden p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/20 transition-all">
+                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-2">
+                        <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                        Items Per Chunk File
+                    </label>
+                    <input type="number" id="items-per-part" value="100" min="1" 
+                        class="glass-input w-full rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600">
+                </div>
+
+                <!-- Naming Convention Selector -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Output Naming Convention</label>
+                    <select id="naming-convention" class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-200 bg-slate-950 focus:bg-slate-900 cursor-pointer">
+                        <option value="counter">Sequential Index Counter (e.g., part_1.csv, part_2.csv)</option>
+                        <option value="time">Timestamp Identifier (e.g., part_17281920_1.csv)</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="button" id="process-btn" onclick="processBotFile()" 
+                    class="w-full relative group bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg shadow-indigo-600/25 active:scale-[0.99] flex items-center justify-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4 fill-white" id="process-icon"></i>
+                    <span id="process-btn-text">Execute Bot Processor</span>
+                </button>
+            </form>
+
+            <!-- Results Output Terminal Log -->
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i data-lucide="terminal" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        Execution Console Log
+                    </span>
+                    <button onclick="clearConsole()" class="text-[10px] text-slate-500 hover:text-slate-300 transition-colors">Clear</button>
+                </div>
+                <div id="output-results" class="glass-input w-full min-h-[90px] max-h-[160px] overflow-y-auto p-4 rounded-xl text-xs font-mono text-indigo-300/90 whitespace-pre-wrap leading-relaxed border-slate-800">Ready for task execution...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT LOGIC (IDENTICAL EVENT HANDLERS & IDS) -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        let activeApiUrl = "";
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const nameSpan = document.getElementById("selected-file-name");
+            const textSpan = document.getElementById("file-name-text");
+            const container = document.getElementById("file-label-container");
+
+            if (file) {
+                textSpan.innerText = file.name;
+                nameSpan.classList.remove("hidden");
+                container.classList.add("hidden");
+            } else {
+                nameSpan.classList.add("hidden");
+                container.classList.remove("hidden");
+            }
+        }
+
+        function clearConsole() {
+            document.getElementById("output-results").innerText = "Console cleared. Ready...";
+        }
+
+        async function connectAPI() {
+            const urlInput = document.getElementById("api-url").value.trim();
+            const badge = document.getElementById("status-badge");
+            const tokenField = document.getElementById("auth-token");
+            const authBtn = document.getElementById("auth-btn");
+            const lockIcon = document.getElementById("token-lock-icon");
+
+            if (!urlInput) {
+                alert("Please enter a valid Cloudflare API URL.");
+                return;
+            }
+
+            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping"></span><span>Connecting...</span>`;
+            badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-950/80 text-yellow-400 border border-yellow-800/50 shadow-sm";
+
+            try {
+                // Test connection to backend
+                const response = await fetch(`${urlInput}/`);
+                if (response.ok) {
+                    activeApiUrl = urlInput;
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Connected</span>`;
+                    badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800/50 shadow-sm";
+                    
+                    // Unlock token field and button
+                    tokenField.disabled = false;
+                    tokenField.classList.remove("opacity-50", "cursor-not-allowed");
+                    tokenField.placeholder = "Enter your secret token...";
+                    
+                    if (lockIcon) {
+                        lockIcon.setAttribute("data-lucide", "lock-keyhole-open");
+                        lucide.createIcons();
+                    }
+
+                    authBtn.disabled = false;
+                    authBtn.classList.remove("bg-slate-800", "text-slate-500", "cursor-not-allowed", "border-slate-700/50");
+                    authBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500", "text-white", "shadow-lg", "shadow-indigo-600/20", "cursor-pointer");
+                } else {
+                    throw new Error("Invalid response");
+                }
+            } catch (err) {
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Connection Failed</span>`;
+                badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-950/80 text-red-400 border border-red-800/50 shadow-sm";
+                alert("Could not connect to the provided Cloudflare URL. Make sure start.py is running and URL is correct.");
+            }
+        }
+
+        async function verifyToken() {
+            const token = document.getElementById("auth-token").value.trim();
+            if (!token) {
+                alert("Please enter your authorization token.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${activeApiUrl}/api/verify-token`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById("lock-screen").classList.add("hidden");
+                    document.getElementById("main-dashboard").classList.remove("hidden");
+                } else {
+                    alert(data.message || "Invalid token.");
+                }
+            } catch (e) {
+                alert("Authentication error while connecting to backend.");
+            }
+        }
+
+        function toggleSplitOptions() {
+            const mode = document.getElementById("split-mode").value;
+            const partsOpts = document.getElementById("parts-options");
+            if (mode === "parts") {
+                partsOpts.classList.remove("hidden");
+            } else {
+                partsOpts.classList.add("hidden");
+            }
+        }
+
+        async function processBotFile() {
+            const fileInput = document.getElementById("bot-file").files[0];
+            if (!fileInput) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            const btnText = document.getElementById("process-btn-text");
+            const btnIcon = document.getElementById("process-icon");
+            const consoleLog = document.getElementById("output-results");
+
+            // UI Spinner loading state
+            btnText.innerText = "Processing Dataset...";
+            btnIcon.setAttribute("data-lucide", "loader-2");
+            btnIcon.classList.add("animate-spin");
+            lucide.createIcons();
+
+            consoleLog.innerText = `[${new Date().toLocaleTimeString()}] Task initiated... Uploading ${fileInput.name} to server.\n`;
+
+            const formData = new FormData();
+            formData.append("file", fileInput);
+            formData.append("column_mapping", document.getElementById("column-mapping").value);
+            formData.append("return_format", document.getElementById("return-format").value);
+            formData.append("split_mode", document.getElementById("split-mode").value);
+            formData.append("items_per_part", document.getElementById("items-per-part").value);
+            formData.append("naming_convention", document.getElementById("naming-convention").value);
+
+            const token = document.getElementById("auth-token").value.trim();
+
+            try {
+                const res = await fetch(`${activeApiUrl}/api/process-file`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    consoleLog.innerText += `[SUCCESS] ${data.message}\nGenerated files:\n` + data.files.map(f => `  • ${f}`).join("\n");
+                } else {
+                    consoleLog.innerText += `[ERROR] ${data.error || "Processing failed."}`;
+                    alert(data.error || "Processing failed.");
+                }
+            } catch (err) {
+                consoleLog.innerText += `[CRITICAL ERROR] Network or execution error occurred.`;
+            } finally {
+                // Reset button state
+                btnText.innerText = "Execute Bot Processor";
+                btnIcon.setAttribute("data-lucide", "play");
+                btnIcon.classList.remove("animate-spin");
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+</html>
